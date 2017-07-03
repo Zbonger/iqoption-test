@@ -9,7 +9,6 @@ import java.io.IOException;
 
 public class WebSocketClientRule extends ExternalResource implements WebSocketClient{
     private final WebSocketClient client;
-    private AnswerCollector collector;
 
     public static WebSocketClientRule defaultWebSocketClient(){
         return new WebSocketClientRule(new WebSocketClientImpl("wss://iqoption.com/echo/websocket"));
@@ -20,7 +19,6 @@ public class WebSocketClientRule extends ExternalResource implements WebSocketCl
     }
 
     protected void before() {
-        this.collector = new AnswerCollector();
         client.connect();
     }
 
@@ -30,10 +28,6 @@ public class WebSocketClientRule extends ExternalResource implements WebSocketCl
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public AnswerCollector getCollector() {
-        return collector;
     }
 
     @Override

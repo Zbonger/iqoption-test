@@ -4,11 +4,13 @@ import com.iqoption.api.IqOptionApi;
 import com.iqoption.api.beans.login.Credentials;
 import com.iqoption.api.beans.profile.Profile;
 import com.iqoption.websocket.beans.Message;
+import com.iqoption.websocket.rules.AnswerCollector;
 import com.iqoption.websocket.rules.WebSocketClientRule;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static com.iqoption.data.factory.CredentialsProvider.registeredUser;
 import static com.iqoption.websocket.matchers.IsAnswerHandledMatcher.isAnswerHandled;
 import static com.iqoption.websocket.rules.WebSocketClientRule.defaultWebSocketClient;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -21,11 +23,12 @@ import static ru.yandex.qatools.matchers.decorators.MatcherDecorators.timeoutHas
 
 
 public class WebSocketLoginTest {
+    private static final Credentials credentials = registeredUser();
 
     @Rule
     public final WebSocketClientRule client = defaultWebSocketClient();
+    private AnswerCollector collector = new AnswerCollector();
 
-    private final Credentials credentials = new Credentials("nemanovich@gmail.com", "123456");
     private final String ssid = IqOptionApi.login(credentials).cookie("ssid");
 
     private Profile expectedProfile;
@@ -39,11 +42,11 @@ public class WebSocketLoginTest {
     @Test
     public void testResponseProfile() {
         client.setMessageHandler(message ->
-                client.getCollector().collectWithCondition(message, answer -> answer.getName().equals("profile"))
+                collector.collectWithCondition(message, answer -> answer.getName().equals("profile"))
         );
         client.sendMessage(new Message("ssid", ssid));
 
-        assertThat(client.getCollector(), should(isAnswerHandled()).whileWaitingUntil(timeoutHasExpired()));
-        assertThat(client.getCollector().getAnswer().getMessage(Profile.class), sameBeanAs(expectedProfile));
+        assertThat(collector, should(isAnswerHandled()).whileWaitingUntil(timeoutHasExpired()));
+        assertThat(collector.getAnswer().getMessage(Profile.class), sameBeanAs(expectedProfile));
     }
 }
